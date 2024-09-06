@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table to CSV</title>
+</head>
+<body>
+
+<h2>Sample Table</h2>
+<table id="myTable" border="1">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Country</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>John Doe</td>
+            <td>25</td>
+            <td>USA</td>
+        </tr>
+        <tr>
+            <td>Jane Smith</td>
+            <td>30</td>
+            <td>UK</td>
+        </tr>
+        <tr>
+            <td>Mike Lee</td>
+            <td>35</td>
+            <td>Canada</td>
+        </tr>
+    </tbody>
+</table>
+
+<br>
+<!-- Export Button -->
+<button onclick="exportTableToCSV('table-data.csv')">Export to CSV</button>
+
+<script>
+// Function to export table data to CSV
+function exportTableToCSV(filename) {
+    var csv = [];
+    var rows = document.querySelectorAll("table tr");
+
+    // Loop through each row of the table
+    for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("td, th");
+
+        // Loop through each column in the row
+        for (var j = 0; j < cols.length; j++) {
+            // Escape commas and quotes in the content
+            var cell = cols[j].innerText.replace(/"/g, '""');
+            row.push('"' + cell + '"');
+        }
+
+        // Add the row to CSV
+        csv.push(row.join(","));
+    }
+
+    // Create a CSV string
+    var csvString = csv.join("\n");
+
+    // Create a download link for the CSV
+    var link = document.createElement("a");
+    link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvString);
+    link.download = filename;
+
+    // Trigger the download
+    link.click();
+}
+</script>
+
+</body>
+</html>
