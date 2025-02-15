@@ -1,0 +1,68 @@
+import subprocess
+
+# Database connection details
+DB_SERVER = 'your_sybase_server'
+DB_NAME = 'your_database'
+DB_USER = 'your_username'
+DB_PASSWORD = 'your_password'
+TABLE_NAME = 'your_table'
+SCHEMA_FILE = 'your_table_schema.sql'
+DATA_FILE = 'your_table_data.txt'
+
+def run_isql_command(command):
+    result = subprocess.run(['isql', '-S', DB_SERVER, '-U', DB_USER, '-P', DB_PASSWORD, '-D', DB_NAME, '-b', '-Q', command],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print(f"Error: {result.stderr.strip()}")
+    return result.stdout.strip()
+
+# Check if table exists
+check_table_command = f"SELECT 1 FROM sysobjects WHERE type = 'U' AND name = '{TABLE_NAME}'"
+table_exists = run_isql_command(check_table_command)
+
+if table_exists:
+    print(f"Table {TABLE_NAME} exists.")
+    
+    # Get the current schema of the table
+    get_schema_command = f"sp_helptext '{TABLE_NAME}'"
+    current_schema = run_isql_command(get_schema_command)
+    
+    # Load the saved schema from file
+    with open(SCHEMA_FILE, 'r') as file:
+        saved_schema = file.read().strip()
+    
+    # Compare schemas
+    if current_schema != saved_schema:
+        print("Schema is different. Recreating table.")
+        
+        # Drop the existing table
+        drop_table_command = f"DROP TABLE {TABLE_NAME}"
+        run_isql_command(drop_table_command)
+        
+        # Recreate the table with the new schema
+        run_isql_command(saved_schema)
+        
+        # Load the new data
+        with open(DATA_FILE, 'r') as file:
+            for line in file:
+                # Customize this part based on your data format
+                load_data_command = f"INSERT INTO {TABLE_NAME} VALUES ({line.strip()})"
+                run_isql_command(load_data_command)
+        print("Data loaded successfully.")
+    else:
+        print("Schema is the same. No changes needed.")
+else:
+    print(f"Table {TABLE_NAME} does not exist. Creating table.")
+    
+    # Create the table with the new schema
+    with open(SCHEMA_FILE, 'r') as file:
+        saved_schema = file.read().strip()
+    run_isql_command(saved_schema)
+    
+    # Load the new data
+    with open(DATA_FILE, 'r') as file:
+        for line in file:
+            # Customize this part based on your data format
+            load_data_command = f"INSERT INTO {TABLE_NAME} VALUES ({line.strip()})"
+            run_isql_command(load_data_command)
+    print("Data loaded successfully.")
