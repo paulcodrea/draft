@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Database connection details
+DB_SERVER="your_sybase_server"
+DB_NAME="your_database"
+DB_USER="your_username"
+DB_PASSWORD="your_password"
+TABLE_NAME="your_table"
+SCHEMA_FILE="${TABLE_NAME}_schema.sql"
+DATA_FILE="${TABLE_NAME}_data.txt"
+ARCHIVE_FILE="${TABLE_NAME}_archive.tar.gz"
+
+# Extract the schema
+isql -S $DB_SERVER -U $DB_USER -P $DB_PASSWORD -D $DB_NAME -b -Q "sp_helptext '$TABLE_NAME'" > $SCHEMA_FILE
+
+# Export the table data
+bcp $DB_NAME..$TABLE_NAME out $DATA_FILE -S $DB_SERVER -U $DB_USER -P $DB_PASSWORD -c
+
+# Create an archive file containing both the schema and data
+tar -czvf $ARCHIVE_FILE $SCHEMA_FILE $DATA_FILE
+
+# Clean up individual files
+rm $SCHEMA_FILE $DATA_FILE
+
+echo "Schema and data archived in $ARCHIVE_FILE"
